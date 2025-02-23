@@ -3,7 +3,7 @@ body {
   font-family: 'Helvetica Neue', sans-serif;
   margin: 0;
   padding: 0;
-  /* High-contrast gradient for the background */
+  /* A cooler blue gradient background for high contrast */
   background: linear-gradient(135deg, #2e3192, #1bffff);
   color: #fff;
   display: flex;
@@ -23,7 +23,7 @@ body {
   width: 90%;
   margin: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-  animation: fadeIn 0.5s ease-out; /* Fade-in for container */
+  animation: fadeIn 0.5s ease-out;
 }
 
 /* Fade-in Keyframes */
@@ -37,7 +37,6 @@ header {
   text-align: center;
   margin-bottom: 20px;
 }
-
 header h1 {
   margin: 0;
   font-size: 2em;
@@ -50,7 +49,7 @@ header h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: fadeIn 0.5s ease-out; /* Fade-in for sections */
+  animation: fadeIn 0.5s ease-out;
 }
 
 /* Buttons */
@@ -60,41 +59,41 @@ button {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  transition: background 0.3s, transform 0.2s;
+  transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
   width: 100%;
   margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Primary Buttons with Pink Gradient */
+/* Primary Buttons with a Softer Pink Gradient */
 .primary-btn {
-  background: linear-gradient(135deg, #ff4081, #f50057);
+  background: linear-gradient(135deg, #f8bbd0, #f48fb1);
   color: #fff;
 }
-
 .primary-btn:hover {
-  background: linear-gradient(135deg, #f50057, #c51162);
+  background: linear-gradient(135deg, #f48fb1, #ec407a);
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 /* Secondary and Danger Buttons */
 .secondary-btn {
-  background-color: #4caf50; /* Green */
+  background-color: #4caf50;
   color: #fff;
 }
-
 .secondary-btn:hover {
   background-color: #388e3c;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
-
 .danger-btn {
-  background-color: #f44336; /* Red */
+  background-color: #f44336;
   color: #fff;
 }
-
 .danger-btn:hover {
   background-color: #d32f2f;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 /* Menu Items & Form Elements */
@@ -102,13 +101,11 @@ button {
   margin-bottom: 15px;
   width: 100%;
 }
-
 label {
   display: block;
   margin-bottom: 5px;
   color: #333;
 }
-
 select {
   width: 100%;
   padding: 10px;
@@ -118,7 +115,7 @@ select {
   color: #333;
 }
 
-/* Hidden for sections not in view */
+/* Hidden */
 .hidden {
   display: none;
 }
@@ -128,9 +125,8 @@ select {
   font-size: 2em;
   text-align: center;
   margin-bottom: 20px;
-  color: #303f9f; /* Darker blue for contrast */
+  color: #303f9f;
 }
-
 .question-container {
   font-size: 1.2em;
   text-align: center;
@@ -143,7 +139,7 @@ select {
   text-align: center;
   margin-bottom: 20px;
   font-weight: bold;
-  min-height: 30px; /* Reserve space so layout doesn't shift */
+  min-height: 30px; /* Reserve space to prevent layout shifts */
   transition: opacity 0.3s ease;
 }
 
@@ -159,7 +155,6 @@ select {
   border-radius: 10px;
   justify-items: center;
 }
-
 .key-button {
   width: 100%;
   padding: 15px 0;
@@ -169,16 +164,16 @@ select {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   text-align: center;
 }
-
 .key-button:hover {
   background: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-/* Back Button Styling */
+/* Back Button */
 #back-button {
   background: #ff9800;
   color: #fff;
@@ -186,7 +181,6 @@ select {
   border-radius: 8px;
   margin-bottom: 10px;
 }
-
 #back-button:hover {
   background: #fb8c00;
 }
@@ -208,7 +202,6 @@ select {
 .input-correct {
   border-color: #4CAF50 !important;
 }
-
 .input-incorrect {
   border-color: #F44336 !important;
 }
@@ -225,16 +218,13 @@ select {
   background: rgba(255, 255, 255, 0.9);
   color: #333;
 }
-
 .practice-history div {
   padding: 8px 0;
   border-bottom: 1px solid #eee;
 }
-
 .practice-history div:last-child {
   border-bottom: none;
 }
-
 .result-text {
   width: 100%;
   text-align: center;
@@ -250,7 +240,6 @@ select {
     border-radius: 0;
     margin: 0;
   }
-  
   .key-button {
     font-size: 1.1em;
     padding: 12px 0;
