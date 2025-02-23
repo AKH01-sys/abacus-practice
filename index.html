@@ -1,75 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abacus Practice</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abacus Practice</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Abacus Practice</h1>
-        <div id="main-menu">
-            <button onclick="showPracticeMenu()">Practice</button>
-            <button onclick="showStats()">Stats</button>
-        </div>
-        <div id="practice-menu" class="hidden">
-            <div class="menu-item">
-                <label for="operation">Operation:</label>
-                <select id="operation">
-                    <option value="Addition">Addition</option>
-                    <option value="Subtraction">Subtraction</option>
-                    <option value="Multiplication">Multiplication</option>
-                    <option value="Division">Division</option>
-                </select>
-            </div>
-            <div class="menu-item">
-                <label for="digits">Number of digits:</label>
-                <select id="digits">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-            </div>
-            <div class="menu-item">
-                <label for="time">Time (minutes):</label>
-                <select id="time">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                </select>
-            </div>
-            <button onclick="startPractice()">Start</button>
-            <button onclick="backToMainMenu()">Back to Main Menu</button>
-        </div>
-        <div id="practice-session" class="hidden">
-            <div id="countdown"></div>
-            <div id="question-container"></div>
-            <div id="answer-feedback"></div>
-            <div id="question-history"></div>
-        </div>
-        <div id="results" class="hidden">
-            <h2>Results</h2>
-            <div id="score"></div>
-            <div id="stats"></div>
-            <button onclick="restartPractice()">Restart</button>
-            <button onclick="showPracticeMenu()">Change Settings</button>
-            <button onclick="backToMainMenu()">Exit to Main Menu</button>
-        </div>
-        <div id="stats-page" class="hidden">
-            <h2>Stats</h2>
-            <div id="total-time"></div>
-            <div id="average-accuracy"></div>
-            <div id="last-three-practices">
-                <h3>Last 3 Practices</h3>
-            </div>
-            <button onclick="backToMainMenu()">Back to Main Menu</button>
-        </div>
-    </div>
-    <script src="script.js"></script>
+  <div class="container">
+    <header>
+      <h1>Abacus Practice</h1>
+    </header>
+    <section id="main-menu" class="section fade-in">
+      <button class="primary-btn" onclick="showPracticeMenu()">Practice</button>
+      <button class="primary-btn" onclick="showStats()">Stats</button>
+    </section>
+    <section id="practice-menu" class="section hidden fade-in">
+      <div class="menu-item">
+        <label for="operation">Operation:</label>
+        <select id="operation">
+          <option value="Addition">Addition</option>
+          <option value="Subtraction">Subtraction</option>
+          <option value="Multiplication">Multiplication</option>
+          <option value="Division">Division</option>
+        </select>
+      </div>
+      <div class="menu-item">
+        <label for="digits">Number of Digits:</label>
+        <select id="digits">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+      <div class="menu-item">
+        <label for="time">Time (minutes):</label>
+        <select id="time">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+      <button class="primary-btn" onclick="startPractice()">Start</button>
+      <button class="secondary-btn" onclick="backToMainMenu()">Back to Main Menu</button>
+    </section>
+    <section id="practice-session" class="section hidden fade-in">
+      <!-- The dynamic Back button ("Back to Settings") will be injected here by JavaScript -->
+      <div id="countdown" class="countdown"></div>
+      <div id="question-container" class="question-container"></div>
+      <div id="answer-feedback" class="feedback"></div>
+      <!-- Virtual Keyboard Container -->
+      <div id="virtual-keyboard" class="virtual-keyboard"></div>
+    </section>
+    <section id="results" class="section hidden fade-in">
+      <h2>Results</h2>
+      <div id="score" class="result-text"></div>
+      <div id="stats" class="result-text"></div>
+      <button class="primary-btn" onclick="restartPractice()">Restart</button>
+      <button class="secondary-btn" onclick="showPracticeMenu()">Change Settings</button>
+      <button class="secondary-btn" onclick="backToMainMenu()">Exit to Main Menu</button>
+    </section>
+    <section id="stats-page" class="section hidden fade-in">
+      <h2>Stats</h2>
+      <div id="total-time" class="result-text"></div>
+      <div id="average-accuracy" class="result-text"></div>
+      <div class="menu-item">
+        <label for="stats-filter">Filter Practices:</label>
+        <select id="stats-filter" onchange="updateStats()">
+          <option value="last3">Last 3 Practices</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="thisweek">This Week</option>
+          <option value="lastweek">Last Week</option>
+          <option value="last30" selected>Last 30 Days</option>
+        </select>
+      </div>
+      <div id="practice-history" class="practice-history">
+        <!-- Filtered practices will be rendered here -->
+      </div>
+      <button class="danger-btn" onclick="clearStats()">Clear Stats</button>
+      <button class="secondary-btn" onclick="backToMainMenu()">Back to Main Menu</button>
+    </section>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
