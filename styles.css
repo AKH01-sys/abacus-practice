@@ -67,13 +67,14 @@ button {
 
 /* Primary Buttons with a Softer Pink Gradient */
 .primary-btn {
-  background: linear-gradient(135deg, #f8bbd0, #f48fb1);
+  background: linear-gradient(135deg, #d81b60, #c2185b); /* Darker, richer pink gradient */
   color: #fff;
 }
+
 .primary-btn:hover {
-  background: linear-gradient(135deg, #f48fb1, #ec407a);
+  background: linear-gradient(135deg, #f50057, #ec407a); /* Your vibrant hover gradient */
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Secondary and Danger Buttons */
