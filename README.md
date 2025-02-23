@@ -2,7 +2,7 @@
 
 ### A sleek, interactive web app for practicing mental math with real-time feedback and analytics.
 
-![Abacus Practice App](https://your-image-url.com) <!-- Optional: Replace with an actual screenshot of the app -->
+![Abacus Practice App](https://postimg.cc/w7x25nCB) <!-- Optional: Replace with an actual screenshot of the app -->
 
 ## 🚀 Features
 
