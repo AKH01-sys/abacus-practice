@@ -16,8 +16,13 @@
   <link rel="manifest" href="manifest.json" />
   
   <!-- PWA Icons -->
-  <link rel="icon" href="abacus.png" />
+  <link rel="icon" href="abacus.png" type="image/png" />
+  <link rel="icon" href="abacus.png" sizes="16x16" type="image/png" />
+  <link rel="icon" href="abacus.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="abacus.png" sizes="192x192" type="image/png" />
   <link rel="apple-touch-icon" href="abacus.png" />
+  <!-- Explicit fallback to prevent favicon.ico 404s -->
+  <link rel="shortcut icon" href="abacus.png" />
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="styles.css" />

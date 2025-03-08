@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './offline.html',
   './abacus.png'
+  // favicon.ico requests will be redirected to abacus.png by the fetch handler
 ];
 
 // Log with timestamp
@@ -72,6 +73,18 @@ self.addEventListener('fetch', (event) => {
     event.request.url.includes('analytics') ||
     event.request.url.includes('/api/')
   ) {
+    return;
+  }
+  
+  // Handle favicon.ico requests by redirecting to abacus.png
+  if (event.request.url.includes('favicon.ico')) {
+    event.respondWith(
+      caches.match('./abacus.png')
+        .then(response => {
+          return response || fetch('./abacus.png');
+        })
+        .catch(() => new Response('No favicon available', { status: 200 }))
+    );
     return;
   }
   
