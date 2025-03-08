@@ -2,14 +2,14 @@
 const VERSION = '1.0.0';
 const CACHE_NAME = `abacus-practice-v${VERSION}`;
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/script.js',
-  '/data-manager.js',
-  '/manifest.json',
-  '/offline.html',
-  '/abacus.png'
+  './',
+  './index.html',
+  './styles.css',
+  './script.js',
+  './data-manager.js',
+  './manifest.json',
+  './offline.html',
+  './abacus.png'
 ];
 
 // Log with timestamp
@@ -111,7 +111,14 @@ self.addEventListener('fetch', (event) => {
             
             // If fetch fails (offline), show offline page for navigation requests
             if (event.request.mode === 'navigate') {
-              return caches.match('/offline.html');
+              return caches.match('./offline.html')
+                .then(offlineResponse => {
+                  if (offlineResponse) {
+                    return offlineResponse;
+                  }
+                  // If offline.html is not in cache, try the root
+                  return caches.match('./');
+                });
             }
             
             // For non-HTML requests return a simple offline response
