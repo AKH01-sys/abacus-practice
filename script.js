@@ -5,6 +5,22 @@ let attemptedQuestions = 0;
 let timer;
 let startTime;
 
+// PWA Installation
+let deferredPrompt;
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Prevent form submissions
+  document.addEventListener('submit', function(e) {
+    e.preventDefault();
+    return false;
+  }, true);
+  
+  // Make sure we start at the main menu
+  hideAllSections();
+  mainMenu.classList.remove('hidden');
+});
+
 // DOM elements
 const mainMenu = document.getElementById('main-menu');
 const practiceMenu = document.getElementById('practice-menu');
@@ -15,6 +31,17 @@ const countdownEl = document.getElementById('countdown');
 const questionContainerEl = document.getElementById('question-container');
 const answerFeedbackEl = document.getElementById('answer-feedback');
 
+// Error handling helper
+function handleError(errorMessage, fallbackAction) {
+  console.error(errorMessage);
+  try {
+    fallbackAction();
+  } catch (e) {
+    console.error('Error in fallback action:', e);
+    alert('An unexpected error occurred. Please refresh the page.');
+  }
+}
+
 // Create a Back button to return to the practice settings
 function createBackButton() {
   let backBtn = document.getElementById('back-button');
@@ -22,15 +49,19 @@ function createBackButton() {
     backBtn = document.createElement('button');
     backBtn.id = 'back-button';
     backBtn.textContent = 'Back to Settings';
+    backBtn.type = 'button';
     backBtn.onclick = returnToSettings;
     practiceSession.insertBefore(backBtn, practiceSession.firstChild);
   }
 }
 
-function returnToSettings() {
-  clearTimeout(timer);
-  hideAllSections();
-  practiceMenu.classList.remove('hidden');
+// Simple section navigation - no delays or transitions
+function hideAllSections() {
+  mainMenu.classList.add('hidden');
+  practiceMenu.classList.add('hidden');
+  practiceSession.classList.add('hidden');
+  resultsDiv.classList.add('hidden');
+  statsPage.classList.add('hidden');
 }
 
 function showPracticeMenu() {
@@ -43,23 +74,15 @@ function backToMainMenu() {
   mainMenu.classList.remove('hidden');
 }
 
-function hideAllSections() {
-  mainMenu.classList.add('hidden');
-  practiceMenu.classList.add('hidden');
-  practiceSession.classList.add('hidden');
-  resultsDiv.classList.add('hidden');
-  statsPage.classList.add('hidden');
+function showStats() {
+  hideAllSections();
+  statsPage.classList.remove('hidden');
+  updateStats();
 }
 
 function clearResults() {
   resultsDiv.querySelector('#score').textContent = '';
   resultsDiv.querySelector('#stats').textContent = '';
-}
-
-function showStats() {
-  hideAllSections();
-  statsPage.classList.remove('hidden');
-  updateStats();
 }
 
 function startPractice() {
@@ -72,13 +95,18 @@ function startPractice() {
   attemptedQuestions = 0;
   currentQuestionIndex = 0;
 
+  // First hide all sections
   hideAllSections();
-  practiceSession.classList.remove('hidden');
-  createBackButton();
   
+  // Create elements and prepare practice session
+  createBackButton();
   countdownEl.textContent = 'Ready?';
   questionContainerEl.innerHTML = '';
+  
+  // Show practice session
+  practiceSession.classList.remove('hidden');
 
+  // Start countdown after section is visible
   setTimeout(() => {
     countdownEl.textContent = 'Go!';
     setTimeout(() => {
@@ -89,38 +117,79 @@ function startPractice() {
 }
 
 function generateQuestions(operation, digits) {
-  const operations = {
-    "Addition": "+",
-    "Subtraction": "-",
-    "Multiplication": "*",
-    "Division": "/"
-  };
+  try {
+    const operations = {
+      "Addition": "+",
+      "Subtraction": "-",
+      "Multiplication": "*",
+      "Division": "/"
+    };
 
-  const questions = [];
-  for (let i = 0; i < 100; i++) {
-    let num1, num2;
-    if (operation === "Division") {
-      num2 = getRandomInt(1, Math.pow(10, digits));
-      num1 = num2 * getRandomInt(1, Math.pow(10, digits));
-    } else {
-      num1 = getRandomInt(Math.pow(10, digits - 1), Math.pow(10, digits) - 1);
-      num2 = getRandomInt(Math.pow(10, digits - 1), Math.pow(10, digits) - 1);
-      if (operation === "Subtraction" && num1 < num2) {
-        [num1, num2] = [num2, num1];
+    const questions = [];
+    const maxQuestions = 100;  // Set a reasonable limit
+    
+    for (let i = 0; i < maxQuestions; i++) {
+      let num1, num2, answer;
+      const operator = operations[operation];
+      
+      if (!operator) {
+        throw new Error(`Invalid operation: ${operation}`);
       }
+      
+      if (operation === "Division") {
+        // Generate division problems with whole number answers
+        num2 = getRandomInt(1, Math.min(Math.pow(10, digits), 100));
+        num1 = num2 * getRandomInt(1, Math.min(Math.pow(10, digits), 100));
+        answer = Math.floor(num1 / num2);
+      } else {
+        num1 = getRandomInt(Math.pow(10, digits - 1), Math.min(Math.pow(10, digits) - 1, 9999));
+        num2 = getRandomInt(Math.pow(10, digits - 1), Math.min(Math.pow(10, digits) - 1, 9999));
+        
+        // Ensure subtraction doesn't result in negative answers for beginners
+        if (operation === "Subtraction" && num1 < num2) {
+          [num1, num2] = [num2, num1];
+        }
+        
+        // Calculate answer safely without eval()
+        switch(operator) {
+          case '+': answer = num1 + num2; break;
+          case '-': answer = num1 - num2; break;
+          case '*': answer = num1 * num2; break;
+          case '/': answer = Math.floor(num1 / num2); break;
+          default: throw new Error(`Unsupported operator: ${operator}`);
+        }
+      }
+      
+      questions.push({ 
+        question: `${num1} ${operator} ${num2}`, 
+        answer 
+      });
     }
-    const question = `${num1} ${operations[operation]} ${num2}`;
-    let answer = eval(question);
-    if (operation === "Division") {
-      answer = Math.floor(answer);
-    }
-    questions.push({ question, answer });
+    return questions;
+  } catch (error) {
+    handleError('Error generating questions', () => {
+      return [{ question: "1 + 1", answer: 2 }]; // Fallback to a simple question
+    });
+    return [{ question: "1 + 1", answer: 2 }]; // Default fallback
   }
-  return questions;
 }
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Replace eval() with a safer calculation method
+function calculateAnswer(num1, operator, num2) {
+  num1 = parseFloat(num1);
+  num2 = parseFloat(num2);
+  
+  switch(operator) {
+    case '+': return num1 + num2;
+    case '-': return num1 - num2;
+    case '*': return num1 * num2;
+    case '/': return num1 / num2;
+    default: throw new Error(`Invalid operator: ${operator}`);
+  }
 }
 
 function startTimer(minutes) {
@@ -145,19 +214,37 @@ function updateTimer(endTime) {
 function showNextQuestion() {
   if (currentQuestionIndex < questions.length) {
     const questionObj = questions[currentQuestionIndex];
-    questionContainerEl.innerHTML = '';
+    
+    // Clear previous content
+    while (questionContainerEl.firstChild) {
+      questionContainerEl.removeChild(questionContainerEl.firstChild);
+    }
+    
+    // Create question text
     const questionDiv = document.createElement('div');
-    questionDiv.innerHTML = `<div>${questionObj.question} = ?</div>`;
+    questionDiv.textContent = `${questionObj.question} = ?`;
     questionContainerEl.appendChild(questionDiv);
     
-    const answerInput = document.createElement('input');
-    answerInput.type = 'text';
-    answerInput.id = 'answer-input';
-    answerInput.placeholder = 'Enter your answer';
-    answerInput.readOnly = true;
-    questionContainerEl.appendChild(answerInput);
-    answerInput.focus();
-
+    // Create answer display area with a better placeholder approach
+    const answerContainer = document.createElement('div');
+    answerContainer.className = 'answer-container';
+    
+    const answerDisplay = document.createElement('div');
+    answerDisplay.id = 'answer-input';
+    answerDisplay.textContent = '';
+    
+    // Add placeholder directly
+    if (!answerDisplay.textContent) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'placeholder';
+      placeholder.textContent = 'Enter your answer';
+      answerDisplay.appendChild(placeholder);
+    }
+    
+    answerContainer.appendChild(answerDisplay);
+    questionContainerEl.appendChild(answerContainer);
+    
+    // Create keyboard
     createVirtualKeyboard();
   } else {
     showResults();
@@ -165,100 +252,227 @@ function showNextQuestion() {
 }
 
 function createVirtualKeyboard() {
+  // Clear previous keyboard
   const keyboardContainer = document.getElementById('virtual-keyboard');
-  keyboardContainer.innerHTML = '';
-  const keys = [
-    '7', '8', '9',
-    '4', '5', '6',
-    '1', '2', '3',
-    '0', '←', 'Submit'
-  ];
+  while (keyboardContainer.firstChild) {
+    keyboardContainer.removeChild(keyboardContainer.firstChild);
+  }
+  
+  // Create grid container
+  const keyGrid = document.createElement('div');
+  keyGrid.className = 'key-grid';
+  
+  // Define keys
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '←', 'Submit'];
+  
+  // Create key elements
   keys.forEach(key => {
-    const keyButton = document.createElement('button');
-    keyButton.textContent = key;
-    keyButton.className = 'key-button';
-    keyButton.onclick = () => handleVirtualKeyPress(key);
-    keyboardContainer.appendChild(keyButton);
+    const keyElement = document.createElement('div');
+    keyElement.className = 'key-button';
+    keyElement.textContent = key;
+    keyElement.setAttribute('data-key', key);
+    keyElement.setAttribute('role', 'button');
+    keyElement.setAttribute('tabindex', '0');
+    
+    keyGrid.appendChild(keyElement);
+  });
+  
+  // Append to container
+  keyboardContainer.appendChild(keyGrid);
+  
+  // Add event delegation (one listener for all keys)
+  keyboardContainer.addEventListener('click', handleKeyboardClick);
+  
+  // Add keyboard navigation
+  keyboardContainer.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const key = e.target.getAttribute('data-key');
+      if (key) {
+        e.preventDefault();
+        processKeyInput(key);
+      }
+    }
   });
 }
 
-function handleVirtualKeyPress(key) {
-  const answerInput = document.getElementById('answer-input');
-  if (!answerInput) return;
-  if (key === 'Submit') {
-    submitAnswer();
-    return;
+function handleKeyboardClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  // Find closest key-button if clicked on child element
+  const keyButton = e.target.closest('.key-button');
+  if (!keyButton) return;
+  
+  const key = keyButton.getAttribute('data-key');
+  if (key) {
+    processKeyInput(key);
   }
-  if (key === '←') {
-    answerInput.value = answerInput.value.slice(0, -1);
-    return;
-  }
-  answerInput.value += key;
+  
+  return false;
 }
 
-function submitAnswer() {
-  const answerInput = document.getElementById('answer-input');
-  if (!answerInput) return;
-  let userAnswer = parseFloat(answerInput.value);
-  const correctAnswer = questions[currentQuestionIndex].answer;
-  checkAnswer(userAnswer, correctAnswer);
+function processKeyInput(key) {
+  const answerDisplay = document.getElementById('answer-input');
+  if (!answerDisplay) return;
+  
+  // Find and remove placeholder if it exists
+  const placeholder = answerDisplay.querySelector('.placeholder');
+  if (placeholder) {
+    answerDisplay.removeChild(placeholder);
+  }
+  
+  if (key === 'Submit') {
+    const answer = answerDisplay.textContent.trim();
+    if (answer) {
+      submitAnswer(answer);
+    } else {
+      answerFeedbackEl.textContent = 'Please enter an answer';
+      answerFeedbackEl.style.color = 'var(--color-error)';
+      
+      // Re-add placeholder if empty
+      const newPlaceholder = document.createElement('span');
+      newPlaceholder.className = 'placeholder';
+      newPlaceholder.textContent = 'Enter your answer';
+      answerDisplay.appendChild(newPlaceholder);
+    }
+    return;
+  }
+  
+  if (key === '←') {
+    answerDisplay.textContent = answerDisplay.textContent.slice(0, -1);
+    
+    // Re-add placeholder if empty
+    if (!answerDisplay.textContent) {
+      const newPlaceholder = document.createElement('span');
+      newPlaceholder.className = 'placeholder';
+      newPlaceholder.textContent = 'Enter your answer';
+      answerDisplay.appendChild(newPlaceholder);
+    }
+    return;
+  }
+  
+  // Only allow digits
+  if (answerDisplay.textContent.length < 15) {
+    answerDisplay.textContent += key;
+  }
+}
+
+function submitAnswer(inputValue) {
+  try {
+    // Validate input
+    if (!inputValue || !/^-?\d+$/.test(inputValue)) {
+      answerFeedbackEl.textContent = 'Please enter a valid number';
+      answerFeedbackEl.style.color = 'var(--color-error)';
+      return;
+    }
+    
+    const userAnswer = parseInt(inputValue, 10);
+    
+    // Validate against potential overflow
+    if (!Number.isFinite(userAnswer)) {
+      answerFeedbackEl.textContent = 'Please enter a smaller number';
+      answerFeedbackEl.style.color = 'var(--color-error)';
+      return;
+    }
+    
+    const correctAnswer = questions[currentQuestionIndex].answer;
+    checkAnswer(userAnswer, correctAnswer);
+    
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    handleError('Error submitting answer', () => {
+      backToMainMenu();
+    });
+  }
 }
 
 function checkAnswer(selected, correct) {
-  attemptedQuestions++;
-  const answerInput = document.getElementById('answer-input');
-  const isCorrect = selected === correct;
-  if (isCorrect) {
-    correctAnswers++;
-    answerFeedbackEl.textContent = 'Correct!';
-    answerFeedbackEl.style.color = 'green';
-    answerInput.classList.add('input-correct');
-  } else {
-    answerFeedbackEl.textContent = `Incorrect! The correct answer was ${correct}.`;
-    answerFeedbackEl.style.color = 'red';
-    answerInput.classList.add('input-incorrect');
+  try {
+    attemptedQuestions++;
+    const answerInput = document.getElementById('answer-input');
+    const isCorrect = selected === correct;
+    if (isCorrect) {
+      correctAnswers++;
+      answerFeedbackEl.textContent = 'Correct!';
+      answerFeedbackEl.style.color = 'var(--color-success)';
+      answerInput.classList.add('input-correct');
+    } else {
+      answerFeedbackEl.textContent = `Incorrect! The correct answer was ${correct}.`;
+      answerFeedbackEl.style.color = 'var(--color-error)';
+      answerInput.classList.add('input-incorrect');
+    }
+    currentQuestionIndex++;
+    setTimeout(() => {
+      answerFeedbackEl.textContent = '';
+      answerInput.classList.remove('input-correct', 'input-incorrect');
+      showNextQuestion();
+    }, 1000);
+  } catch (error) {
+    handleError('Error checking answer', () => {
+      showNextQuestion();
+    });
   }
-  currentQuestionIndex++;
-  setTimeout(() => {
-    answerFeedbackEl.textContent = '';
-    answerInput.classList.remove('input-correct', 'input-incorrect');
-    showNextQuestion();
-  }, 1000);
 }
 
 function showResults() {
+  // First hide all sections
   hideAllSections();
-  resultsDiv.classList.remove('hidden');
+  
+  // Prepare result content
   const scoreText = `You answered ${correctAnswers} out of ${attemptedQuestions} questions correctly.`;
   const accuracy = attemptedQuestions > 0 ? Math.round((correctAnswers / attemptedQuestions) * 100) : 0;
   const averageTime = attemptedQuestions > 0 ? Math.round((Date.now() - startTime) / (attemptedQuestions * 1000)) : 0;
+  
+  // Update result elements
   resultsDiv.querySelector('#score').textContent = scoreText;
   resultsDiv.querySelector('#stats').textContent = `Accuracy: ${accuracy}%, Average Time per Question: ${averageTime} seconds`;
+  
+  // Save stats
   saveStats(accuracy, averageTime);
+  
+  // Show results section
+  resultsDiv.classList.remove('hidden');
 }
 
 function saveStats(accuracy, averageTime) {
-  let stats = JSON.parse(localStorage.getItem('abacusStats')) || { 
-    totalPractices: 0, 
-    practices: [] 
-  };
-  if (!stats.practices || !Array.isArray(stats.practices)) {
-    stats.practices = [];
+  try {
+    let stats = JSON.parse(localStorage.getItem('abacusStats')) || { 
+      totalPractices: 0, 
+      practices: [] 
+    };
+    
+    if (!stats.practices || !Array.isArray(stats.practices)) {
+      stats.practices = [];
+    }
+    
+    stats.totalPractices = (stats.totalPractices || 0) + 1;
+    
+    const operation = document.getElementById('operation')?.value || 'Unknown';
+    const digits = document.getElementById('digits')?.value || '1';
+    const time = parseInt(document.getElementById('time')?.value || '1');
+    
+    const newPractice = {
+      operation,
+      digits,
+      time,
+      score: `${correctAnswers}/${attemptedQuestions}`,
+      accuracy: accuracy || 0,
+      timestamp: Date.now()
+    };
+    
+    stats.practices.unshift(newPractice);
+    
+    // Limit stored practice history to prevent localStorage overflow
+    const maxPractices = 100;
+    if (stats.practices.length > maxPractices) {
+      stats.practices = stats.practices.slice(0, maxPractices);
+    }
+    
+    localStorage.setItem('abacusStats', JSON.stringify(stats));
+  } catch (error) {
+    console.error('Error saving stats:', error);
+    // Continue without saving stats - non-critical error
   }
-  stats.totalPractices++;
-  const newPractice = {
-    operation: document.getElementById('operation').value,
-    digits: document.getElementById('digits').value,
-    time: parseInt(document.getElementById('time').value),
-    score: `${correctAnswers}/${attemptedQuestions}`,
-    accuracy: accuracy,
-    timestamp: Date.now()
-  };
-  stats.practices.unshift(newPractice);
-  const oneDay = 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  stats.practices = stats.practices.filter(practice => practice.timestamp >= now - (30 * oneDay));
-  localStorage.setItem('abacusStats', JSON.stringify(stats));
 }
 
 function updateStats() {
@@ -347,6 +561,12 @@ function clearStats() {
   }
 }
 
+function returnToSettings() {
+  clearTimeout(timer);
+  hideAllSections();
+  practiceMenu.classList.remove('hidden');
+}
+
 function restartPractice() {
   hideAllSections();
   practiceMenu.classList.remove('hidden');
@@ -356,3 +576,94 @@ window.addEventListener('error', (event) => {
   console.error('An error occurred:', event.error);
   alert('An error occurred. Please refresh the page and try again.');
 });
+
+// Listen for the beforeinstallprompt event
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  
+  // Show the install button 
+  showInstallPromotion();
+});
+
+// Function to show install promotion (after first practice session)
+function showInstallPromotion() {
+  // Only show if we've stored the install prompt and user has completed at least one practice
+  if (!deferredPrompt || !localStorage.getItem('practiceStats')) return;
+  
+  // Check if user has already dismissed or installed
+  if (localStorage.getItem('pwaInstallDismissed')) return;
+  
+  // Create install banner
+  const installBanner = document.createElement('div');
+  installBanner.className = 'install-banner';
+  installBanner.innerHTML = `
+    <div class="install-message">
+      <p>Install Abacus Practice on your device for offline use!</p>
+      <div class="install-actions">
+        <button id="install-button" class="primary-btn">Install</button>
+        <button id="dismiss-install" class="secondary-btn">Not Now</button>
+      </div>
+    </div>
+  `;
+  
+  // Add to body
+  document.body.appendChild(installBanner);
+  
+  // Add event listeners
+  document.getElementById('install-button').addEventListener('click', async () => {
+    // Hide install promotion
+    installBanner.style.display = 'none';
+    
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    // Clear the saved prompt
+    deferredPrompt = null;
+    
+    // Record successful installation
+    if (outcome === 'accepted') {
+      localStorage.setItem('pwaInstalled', 'true');
+    }
+  });
+  
+  document.getElementById('dismiss-install').addEventListener('click', () => {
+    // Hide install promotion
+    installBanner.style.display = 'none';
+    
+    // Mark as dismissed for a week
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 7);
+    localStorage.setItem('pwaInstallDismissed', expiryDate.toISOString());
+  });
+}
+
+// Listen for app installed event
+window.addEventListener('appinstalled', () => {
+  // Log install and hide promotion
+  console.log('PWA was installed');
+  const installBanner = document.querySelector('.install-banner');
+  if (installBanner) installBanner.style.display = 'none';
+  
+  // Record installation
+  localStorage.setItem('pwaInstalled', 'true');
+});
+
+// Register Service Worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('ServiceWorker registered successfully with scope:', registration.scope);
+      })
+      .catch(error => {
+        console.error('ServiceWorker registration failed:', error);
+      });
+  });
+}
